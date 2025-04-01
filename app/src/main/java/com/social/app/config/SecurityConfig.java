@@ -3,6 +3,7 @@ package com.social.app.config;
 import com.social.app.services.AuthService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value; // Add this import
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -26,6 +27,9 @@ public class SecurityConfig {
     @Autowired
     private AuthService authService;
 
+    @Value("${frontend.url:http://localhost:5173}") // Inject frontend URL from properties
+    private String frontendUrl;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -46,7 +50,7 @@ public class SecurityConfig {
                             request.getSession().setAttribute("user", authentication.getPrincipal()); // Store user session
                             String redirectUrl = (String) request.getSession().getAttribute("redirectAfterLogin");
                             if (redirectUrl == null) {
-                                redirectUrl = "http://localhost:5173/profile";
+                                redirectUrl = frontendUrl + "/profile"; // Use injected frontend URL
                             }
                             System.out.println("OAuth Success - Redirecting to: " + redirectUrl);
                             response.sendRedirect(redirectUrl);
@@ -82,7 +86,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+        configuration.setAllowedOrigins(List.of(frontendUrl)); // Use injected frontend URL
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
